@@ -25,8 +25,17 @@ V1.03
 		-Default: 1 on start , Minimum: 1 Maximum: OverScrollMultiplier
 V1.04
 	-B4A BugFix
+V1.05
+	-BugFix - Value1 and Value2 were connected in the wrong direction
+	-Add get and set Steps - In how many steps does the slider move
+		-Default: 1
+	-Add Designer Property HapticFeedback
+		-Default: False
+V1.06
+	-Add Event TouchDown
+	-Add Event TouchUp
 #End If
-	
+
 #DesignerProperty: Key: InnerCircleColor, DisplayName: Inner Circle Color, FieldType: Color, DefaultValue: 0xFFFFFFFF
 #DesignerProperty: Key: ReachedColor, DisplayName: Reached Color, FieldType: Color, DefaultValue: 0xFF2D8879
 #DesignerProperty: Key: UnreachedColor, DisplayName: Unreached Color, FieldType: Color, DefaultValue: 0xFFA9A9A9
@@ -36,8 +45,11 @@ V1.04
 #DesignerProperty: Key: ThumbCornerWidth, DisplayName: Thumb Corner Width, FieldType: Int, DefaultValue: 4, MinRange: 2
 #DesignerProperty: Key: Min, DisplayName: Minimum, FieldType: Int, DefaultValue: 0
 #DesignerProperty: Key: Max, DisplayName: Maximum, FieldType: Int, DefaultValue: 100
+#DesignerProperty: Key: HapticFeedback, DisplayName: Haptic Feedback, FieldType: Boolean, DefaultValue: False
 
 #Event: ValueChanged (Value1 As Int,Value2 As Int)
+#Event: TouchDown
+#Event: TouchUp
 
 Sub Class_Globals
 	Private mEventName As String 'ignore
@@ -61,6 +73,8 @@ Sub Class_Globals
 	Private mThumbBorderColor As Int
 	Private mThumbInnerColor As Int
 	Private mInnerCircleColor As Int
+	Private mSteps As Int = 1
+	Private mHapticFeedback As Boolean
 
 	Private mThumbCornerWidth As Float
 	Private mTouchIsRight As Boolean = False
@@ -107,6 +121,7 @@ Public Sub DesignerCreateView (Base As Object, Lbl As Label, Props As Map)
 	mInnerCircleColor = xui.PaintOrColorToColor(Props.Get("InnerCircleColor"))
 	mStrokeWidth = DipToCurrent(Props.GetDefault("StrokeWidth", 40))
 	mThumbCornerWidth = DipToCurrent(Props.GetDefault("ThumbCornerWidth", 4))
+	mHapticFeedback = Props.GetDefault("HapticFeedback",False)
 	mBase.AddView(xpnl_Thumb_1, 0, 0, mStrokeWidth, mStrokeWidth)
 	mBase.AddView(xpnl_Thumb_2, 0, 0, mStrokeWidth, mStrokeWidth)
 	mBase.AddView(pnl, 0, 0, 0, 0)
@@ -180,11 +195,15 @@ Public Sub Draw
 	Dim radius As Int = CircleRect.Width / 2
 	cvs.DrawCircle(CircleRect.CenterX, CircleRect.CenterY, radius, mUnreachedColor , False, mStrokeWidth)
 	Dim p As B4XPath
-	Dim angle1 As Int = (mValue1 - mMin) / (mMax - mMin) * 360
-	Dim angle2 As Int = (mValue2 - mMin) / (mMax - mMin) * 360
+'	Dim angle1 As Int = (mValue1 - mMin) / (mMax - mMin) * 360
+'	Dim angle2 As Int = (mValue2 - mMin) / (mMax - mMin) * 360
+	
+	Dim angle1 As Int = (mValue1 - (mValue1 Mod mSteps) - mMin) / (mMax - mMin) * 360
+	Dim angle2 As Int = (mValue2 - (mValue2 Mod mSteps) - mMin) / (mMax - mMin) * 360
 	
 
-		p.InitializeArc(CircleRect.CenterX, CircleRect.CenterY,IIf(xui.IsB4J,mBase.Width/2,radius + mStrokeWidth/2), angle2-90,IIf(angle2 < angle1,angle1-angle2,360-angle2+angle1))
+	'p.InitializeArc(CircleRect.CenterX, CircleRect.CenterY,IIf(xui.IsB4J,mBase.Width/2,radius + mStrokeWidth/2), angle2-90,IIf(angle2 < angle1,angle1-angle2,360-angle2+angle1))
+	p.InitializeArc(CircleRect.CenterX, CircleRect.CenterY,IIf(xui.IsB4J,mBase.Width/2,radius + mStrokeWidth/2), angle2-90,IIf(angle1 < angle2,angle1-angle2,0-angle2+angle1))
 	cvs.DrawPath(p, mReachedColor, True, 40dip)
 
 	cvs.DrawCircle(CircleRect.CenterX, CircleRect.CenterY, radius - mStrokeWidth/2, mInnerCircleColor, True, 0)
@@ -248,6 +267,7 @@ Private Sub pnl_Touch (Action As Int, X As Float, Y As Float)
 	Dim dist As Float = Sqrt(Power(dx, 2) + Power(dy, 2))
 	'If dist > CircleRect.Width / 2 Then
 	If Action = pnl.TOUCH_ACTION_DOWN Then
+		TouchDown
 		If dist > (CircleRect.Width/4 + mStrokeWidth/2) And dist < (CircleRect.Width/2 + mStrokeWidth/2) Then
 			mTouchIsRight = True
 		End If
@@ -261,6 +281,7 @@ Private Sub pnl_Touch (Action As Int, X As Float, Y As Float)
 		End If
 		
 	else If Action = pnl.TOUCH_ACTION_UP Then
+		TouchUp
 		mTouchIsRight = False
 	End If
 	
@@ -294,10 +315,14 @@ Private Sub SetValueBasedOn(mValue As Int,X As Float,Y As Float)
 '		Else
 
 
-		mValue = NewValue
+		mValue = NewValue - (NewValue Mod mSteps)
 		'End If
 		
-		If OldValue <> mValue Then ValueChanged
+		If TouchedPanel1 = True Then mValue1 = mValue Else mValue2 = mValue
+		
+		If OldValue <> mValue Then 
+			ValueChanged
+		End If
 	End If
 	
 	If TouchedPanel1 = True Then mValue1 = mValue Else mValue2 = mValue
@@ -306,8 +331,21 @@ Private Sub SetValueBasedOn(mValue As Int,X As Float,Y As Float)
 End Sub
 
 Private Sub ValueChanged
+	If mHapticFeedback Then XUIViewsUtils.PerformHapticFeedback(mBase)
 	If xui.SubExists(mCallBack, mEventName & "_ValueChanged", 2) Then
 		CallSub3(mCallBack, mEventName & "_ValueChanged", IIf(mOverScrollMultiplier > 1,(mMax*mCurrentOverScrollMultiplier1)+mValue1,mValue1),IIf(mOverScrollMultiplier > 1,(mMax*mCurrentOverScrollMultiplier2)+mValue2,mValue2))
+	End If
+End Sub
+
+Private Sub TouchDown
+	If xui.SubExists(mCallBack, mEventName & "_TouchDown", 0) Then
+	CallSub(mCallBack, mEventName & "_TouchDown")
+	End If
+End Sub
+
+Private Sub TouchUp
+	If xui.SubExists(mCallBack, mEventName & "_TouchUp", 0) Then
+		CallSub(mCallBack, mEventName & "_TouchUp")
 	End If
 End Sub
 
@@ -490,6 +528,14 @@ End Sub
 
 Public Sub getThumb2View As B4XView
 	Return xpnl_Thumb_2
+End Sub
+
+Public Sub getSteps As Int
+	Return mSteps
+End Sub
+
+Public Sub setSteps(Steps As Int)
+	mSteps = Steps
 End Sub
 
 'https://www.b4x.com/android/forum/threads/fontawesome-to-bitmap.95155/post-603250

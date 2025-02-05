@@ -7,6 +7,6 @@ ModuleBreakpoints2=
 ModuleClosedNodes0=1,4
 ModuleClosedNodes1=
 ModuleClosedNodes2=1
-NavigationStack=Visual Designer,MainPage.bjl,-100,6,B4XMainPage,B4XPage_Created,30,2,B4XMainPage,Class_Globals,13,0,ASRangeRoundSlider,pnl_MousePressed,259,0,ASRangeRoundSlider,DesignerCreateView,99,3,ASRangeRoundSlider,SetValueBasedOn,226,0,ASRangeRoundSlider,Base_Resize,141,5,ASRangeRoundSlider,pnl_Touch,200,1,B4XMainPage,ASRangeRoundSlider1_ValueChanged,43,0,ASRangeRoundSlider,Draw,177,6
+NavigationStack=ASRangeRoundSlider,SetValueBasedOn,226,0,ASRangeRoundSlider,Base_Resize,141,5,ASRangeRoundSlider,pnl_Touch,200,1,B4XMainPage,ASRangeRoundSlider1_ValueChanged,43,0,ASRangeRoundSlider,getValue1,387,0,ASRangeRoundSlider,getThumbIcon1,402,0,ASRangeRoundSlider,CreateThumb,150,0,B4XMainPage,B4XPage_Created,32,6,ASRangeRoundSlider,DesignerCreateView,96,3,ASRangeRoundSlider,Draw,183,6
 SelectedBuild=0
 VisibleModules=2,1

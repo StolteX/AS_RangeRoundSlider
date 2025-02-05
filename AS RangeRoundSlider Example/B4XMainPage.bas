@@ -38,6 +38,11 @@ Private Sub B4XPage_Created (Root1 As B4XView)
 	ASRangeRoundSlider1.ThumbIcon1 = ASRangeRoundSlider1.FontToBitmap(Chr(0xF186),False,IIf(xui.IsB4J,30,20),xui.Color_White)
 	ASRangeRoundSlider1.ThumbIcon2 = ASRangeRoundSlider1.FontToBitmap(Chr(0xE430),True,IIf(xui.IsB4J,30,20),xui.Color_White)
 	'ASRangeRoundSlider1.ThumbIcon1 = Null 'If you dont need a icon anymore set the value to NULL
+	Sleep(2000)
+	ASRangeRoundSlider1.MaxValue = 720
+	ASRangeRoundSlider1.Value1 = 60
+	ASRangeRoundSlider1.Value2 = 120
+	ASRangeRoundSlider1.Draw
 	
 	'Sleep(2000)
 	'ASRangeRoundSlider1.Value = 50
